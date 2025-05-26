@@ -17,6 +17,7 @@ param winVMPassword string //no value specified, so user will get prompted for i
 
 var tags = {
   'azd-env-name': environmentName
+  CostControl:'Ignore'
 }
 
 
