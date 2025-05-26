@@ -34,8 +34,6 @@ Write-Host "Importing .bacpac to SQL Server: $TargetSqlServer, Database: $Target
 
 Write-Host "✅ Database import complete."
 '''
-
-
 param(
     [string]$BacpacUrl,
     [string]$TargetSqlServer,
@@ -50,13 +48,21 @@ if (-not (Test-Path $scriptFolder)) {
     New-Item -Path $scriptFolder -ItemType Directory
 }
 
-# Build connection string
-$connectionString = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin;Password=$SqlPassword;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+# Download the SQL script from GitHub
+$sqlFileUrl = "https://raw.githubusercontent.com/koenraadhaedens/azd-sqlworloadsim/refs/heads/main/sqlscript/workloadsim.sql"
+$sqlFilePath = Join-Path $scriptFolder "workloadsim.sql"
 
-# Define the script content
+Invoke-WebRequest -Uri $sqlFileUrl -OutFile $sqlFilePath
+
+Write-Host "Downloaded SQL script to $sqlFilePath"
+
+# Build connection string (expand values **now**)
+$connectionStringValue = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin;Password=$SqlPassword;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+
+# Define the script content (inject the expanded string directly)
 $scriptContent = @"
-`$connectionString = `"$connectionString`"
-`$sqlFile = `"C:\temp\workloadsim.sql`"
+`$connectionString = `"$connectionStringValue`"
+`$sqlFile = `"$sqlFilePath`"
 
 `$query = Get-Content `$sqlFile -Raw
 
@@ -67,10 +73,10 @@ for (`$i = 0; `$i -lt 1000; `$i++) {
 "@
 
 # Write the script to file
-$scriptPath = Join-Path $scriptFolder "run-workload.ps1"
-$scriptContent | Out-File -FilePath $scriptPath -Encoding UTF8
+$runScriptPath = Join-Path $scriptFolder "run-workload.ps1"
+$scriptContent | Out-File -FilePath $runScriptPath -Encoding UTF8
 
-Write-Host "Script generated at $scriptPath"
+Write-Host "Script generated at $runScriptPath"
 
 # Create shortcut on desktop for all users
 $WScriptShell = New-Object -ComObject WScript.Shell
@@ -79,7 +85,7 @@ $shortcutPath = Join-Path $desktopPath "Run Workload Simulation.lnk"
 
 $shortcut = $WScriptShell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = "powershell.exe"
-$shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$scriptPath`""
+$shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$runScriptPath`""
 $shortcut.WorkingDirectory = $scriptFolder
 $shortcut.WindowStyle = 1
 $shortcut.IconLocation = "powershell.exe"
