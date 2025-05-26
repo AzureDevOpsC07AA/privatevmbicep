@@ -107,7 +107,7 @@ resource scriptExt 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
       ]
     }
     protectedSettings: {
-            commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File deploy-bacpac.ps1 -BacpacUrl "${bacpacStorageUrl}" -SqlServer "${targetSqlServer}" -Database "${targetDb}" -SqlAdmin "${sqlAdmin}" -SqlPassword "${sqlPassword}"'
+      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File deploy-bacpac.ps1 -BacpacUrl "${bacpacStorageUrl}" -TargetSqlServer "${targetSqlServer}" -TargetDatabase "${targetDb}" -SqlAdmin "${sqlAdmin}" -SqlPassword "${sqlPassword}"'
     }
   }
 }
