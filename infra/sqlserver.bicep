@@ -14,7 +14,7 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-01-01' = {
     name: 'Basic'
   }
   properties: {
-    publicIPAllocationMethod: 'Dynamic'
+    publicIPAllocationMethod: 'Static'
   }
 }
 
@@ -31,7 +31,8 @@ resource sqlServer 'Microsoft.Sql/servers@2022-02-01-preview' = {
 
 // Add firewall rule to allow VM Public IP
 resource sqlFirewallRule 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview' = {
-  name: '${sqlServer.name}/${firewallRuleName}'
+  parent: sqlServer
+  name: firewallRuleName
   properties: {
     startIpAddress: publicIp.properties.ipAddress
     endIpAddress: publicIp.properties.ipAddress

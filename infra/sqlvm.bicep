@@ -3,7 +3,7 @@ param adminUsername string
 @secure()
 param adminPassword string
 param location string = resourceGroup().location
-
+param publicIpFromSql string
 param bacpacStorageUrl string
 param targetSqlServer string
 param targetDb string
@@ -45,6 +45,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
             id: vnet.properties.subnets[0].id
           }
           privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: publicIpFromSql
+          }
         }
       }
     ]

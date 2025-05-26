@@ -5,6 +5,7 @@ targetScope = 'subscription'
 @description('Name of the environment that can be used as part of naming resource convention')
 param environmentName string
 
+
 @minLength(1)
 @description('Primary location for all resources')
 param location string
@@ -17,8 +18,11 @@ var tags = {
   'azd-env-name': environmentName
 }
 
+// Generate a unique string using resource group ID and environment name
+var uniqueSuffix = uniqueString(environmentName)
 
-
+// Create a valid SQL Server name using only allowed characters (lowercase, numbers, hyphens)
+var randomizedSqlServerName = toLower('sqlserver-${environmentName}-${uniqueSuffix}')
 
 resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: 'rg-${environmentName}'
@@ -30,12 +34,13 @@ resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
 module sqlServerModule './sqlserver.bicep' = {
   name: 'deploySqlServer'
   params: {
-    sqlServerName: 'sqlserver-${environmentName}'
+    sqlServerName: randomizedSqlServerName
     adminLogin: 'sqladminuser'
     adminPassword: winVMPassword
   }
   scope: rg
 }
+var publicIpFromSql = sqlServerModule.outputs.vmPublicIp
 
 module vmModule './sqlvm.bicep' = {
   name: 'deploySqlVM'
@@ -48,6 +53,7 @@ module vmModule './sqlvm.bicep' = {
     targetDb: 'AdventureWorks2017'
     sqlAdmin: 'sqladminuser'
     sqlPassword: winVMPassword
+    publicIpFromSql: publicIpFromSql
   }
   dependsOn: [
     sqlServerModule
