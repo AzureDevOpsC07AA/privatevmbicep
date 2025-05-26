@@ -62,7 +62,7 @@ module vmModule './sqlvm.bicep' = {
     targetDb: 'AdventureWorks2017'
     sqlAdmin: 'sqladmin'
     sqlPassword: winVMPassword
-    publicIpFromSql: publicIp.outputs.ipAddress
+    publicIpFromSql: publicIp.outputs.publicIpResourceId
   }
   scope: rg
 }
