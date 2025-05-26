@@ -1,15 +1,16 @@
-param location string
-param publicIpName string
+targetScope = 'resourceGroup'
 
-resource publicIp 'Microsoft.Network/publicIPAddresses@2022-05-01' = {
-  name: publicIpName
+param location string
+
+resource publicIp 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: 'myPublicIp'
   location: location
   sku: {
     name: 'Basic'
   }
   properties: {
-    publicIPAllocationMethod: 'Dynamic'
+    publicIPAllocationMethod: 'Static'
   }
 }
 
-output publicIpAddress string = publicIp.properties.ipAddress
+output ipAddress string = publicIp.properties.ipAddress

@@ -1,31 +1,28 @@
-param location string = resourceGroup().location
-param sqlServerName string
-param adminLogin string
-@secure()
-param adminPassword string
-param firewallRuleName string = 'AllowVmPublicIp'
-param vmPublicIp string
+targetScope = 'resourceGroup'
 
-// Create SQL Server
-resource sqlServer 'Microsoft.Sql/servers@2022-02-01-preview' = {
-  name: sqlServerName
+param location string
+param sqlAdminUsername string
+@secure()
+param sqlAdminPassword string
+param allowedIpAddress string
+
+resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
+  name: 'mySqlServer${uniqueString(resourceGroup().id)}'
   location: location
   properties: {
-    administratorLogin: adminLogin
-    administratorLoginPassword: adminPassword
+    administratorLogin: sqlAdminUsername
+    administratorLoginPassword: sqlAdminPassword
     version: '12.0'
   }
 }
 
-// Add firewall rule to allow VM Public IP
-resource sqlFirewallRule 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview' = {
+resource firewallRule 'Microsoft.Sql/servers/firewallRules@2022-05-01-preview' = {
+  name: 'AllowMyPublicIp'
   parent: sqlServer
-  name: firewallRuleName
   properties: {
-    startIpAddress: vmPublicIp
-    endIpAddress: vmPublicIp
+    startIpAddress: allowedIpAddress
+    endIpAddress: allowedIpAddress
   }
 }
 
-output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
-
+output sqlServerName string = sqlServer.name

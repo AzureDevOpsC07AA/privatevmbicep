@@ -1,3 +1,4 @@
+
 targetScope = 'subscription'
 
 @minLength(1)
@@ -18,6 +19,7 @@ var tags = {
   'azd-env-name': environmentName
 }
 
+
 // Generate a unique string using resource group ID and environment name
 var uniqueSuffix = uniqueString(environmentName)
 
@@ -30,44 +32,37 @@ resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   tags: tags
 }
 
-module publicIpModule './publicip.bicep' = {
+module publicIp 'publicip.bicep' = {
   name: 'deployPublicIp'
+  scope: rg
   params: {
     location: location
-    publicIpName: 'sqlpublicip-${environmentName}'
   }
-  scope: rg
 }
 
-
-
-module sqlServerModule './sqlserver.bicep' = {
+module sqlServer 'sqlserver.bicep' = {
   name: 'deploySqlServer'
-  params: {
-    sqlServerName: randomizedSqlServerName
-    adminLogin: 'sqladminuser'
-    adminPassword: winVMPassword
-    vmPublicIp: publicIpModule.outputs.publicIpAddress
-  }
   scope: rg
+  params: {
+    location: location
+    sqlAdminUsername: 'sqladmin'
+    sqlAdminPassword: winVMPassword
+    allowedIpAddress: publicIp.outputs.ipAddress
+  }
 }
-var publicIpFromSql = sqlServerModule.outputs.vmPublicIp
 
 module vmModule './sqlvm.bicep' = {
   name: 'deploySqlVM'
   params: {
-    vmName: 'sqlimportvm'
+    vmName: randomizedSqlServerName
     adminUsername: 'vmadmin'
     adminPassword: winVMPassword
     bacpacStorageUrl: 'https://github.com/koenraadhaedens/azd-sqlworloadsim/raw/refs/heads/main/media/adventureworks2017.bacpac'
-    targetSqlServer: sqlServerModule.outputs.sqlServerFqdn
+    targetSqlServer: sqlServer.outputs.sqlServerName
     targetDb: 'AdventureWorks2017'
-    sqlAdmin: 'sqladminuser'
+    sqlAdmin: 'sqladmin'
     sqlPassword: winVMPassword
-    publicIpFromSql: publicIpFromSql
+    publicIpFromSql: publicIp.outputs.ipAddress
   }
-  dependsOn: [
-    sqlServerModule
-  ]
   scope: rg
 }
