@@ -34,6 +34,7 @@ Write-Host "Importing .bacpac to SQL Server: $TargetSqlServer, Database: $Target
 
 Write-Host "✅ Database import complete."
 '''
+
 param(
     [string]$BacpacUrl,
     [string]$TargetSqlServer,
@@ -56,10 +57,13 @@ Invoke-WebRequest -Uri $sqlFileUrl -OutFile $sqlFilePath
 
 Write-Host "Downloaded SQL script to $sqlFilePath"
 
-# Build connection string (expand values **now**)
-$connectionStringValue = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin;Password=$SqlPassword;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+# Escape single quotes in the password if any (replace ' with '')
+$escapedPassword = $SqlPassword -replace "'", "''"
 
-# Define the script content (inject the expanded string directly)
+# Build the connection string (inject real values, wrap password in single quotes)
+$connectionStringValue = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin;Password='$escapedPassword';Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+
+# Define the script content
 $scriptContent = @"
 `$connectionString = `"$connectionStringValue`"
 `$sqlFile = `"$sqlFilePath`"
