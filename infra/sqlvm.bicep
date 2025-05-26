@@ -111,3 +111,75 @@ resource scriptExt 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
     }
   }
 }
+
+// NSG for NIC
+resource nicNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
+  name: '${vmName}-nic-nsg'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'deny-rdp-nic'
+        properties: {
+          priority: 4000
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '3389'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
+// NSG for VNet/Subnet
+resource vnetNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
+  name: '${vmName}-vnet-nsg'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'deny-rdp-vnet'
+        properties: {
+          priority: 4000
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '3389'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
+// Associate NSG with NIC
+resource nicNsgAssociation 'Microsoft.Network/networkInterfaces/networkSecurityGroup@2021-03-01' = {
+  parent: nic
+  name: 'nic-nsg-association'
+  properties: {
+    networkSecurityGroup: {
+      id: nicNsg.id
+    }
+  }
+}   
+// Associate NSG with VNet/Subnet
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-03-01' existing = {
+  parent: vnet
+  name: 'default'
+}
+
+resource vnetNsgAssociation 'Microsoft.Network/virtualNetworks/subnets/networkSecurityGroup@2021-03-01' = {
+  parent: subnet
+  name: 'networkSecurityGroup'
+  properties: {
+    networkSecurityGroup: {
+      id: vnetNsg.id
+    }
+  }
+}
