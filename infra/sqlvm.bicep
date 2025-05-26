@@ -11,7 +11,75 @@ param sqlAdmin string
 @secure()
 param sqlPassword string
 
-// Create VNet
+// NSG for NIC
+resource nicNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
+  name: '${vmName}-nic-nsg'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'deny-rdp-nic'
+        properties: {
+          priority: 4000
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '3389'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
+// NSG for VNet/Subnet
+resource vnetNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
+  name: '${vmName}-vnet-nsg'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'deny-rdp-vnet'
+        properties: {
+          priority: 4000
+          direction: 'Inbound'
+          access: 'Deny'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '3389'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+        }
+      }
+    ]
+  }
+}
+
+// Update NIC resource to reference NSG
+resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
+  name: '${vmName}-nic'
+  location: location
+  properties: {
+    networkSecurityGroup: {
+      id: nicNsg.id
+    }
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: vnet.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+        }
+      }
+    ]
+  }
+}
+
+// Update subnet inside VNet resource to reference NSG
 resource vnet 'Microsoft.Network/virtualNetworks@2021-03-01' = {
   name: '${vmName}-vnet'
   location: location
@@ -26,33 +94,15 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-03-01' = {
         name: 'default'
         properties: {
           addressPrefix: '10.0.0.0/24'
+          networkSecurityGroup: {
+            id: vnetNsg.id
+          }
         }
       }
     ]
   }
 }
 
-// Create Network Interface
-resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
-  name: '${vmName}-nic'
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          subnet: {
-            id: vnet.properties.subnets[0].id
-          }
-          privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: publicIpFromSql
-          }
-        }
-      }
-    ]
-  }
-}
 
 // Create Virtual Machine
 resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
@@ -112,74 +162,3 @@ resource scriptExt 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
   }
 }
 
-// NSG for NIC
-resource nicNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
-  name: '${vmName}-nic-nsg'
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'deny-rdp-nic'
-        properties: {
-          priority: 4000
-          direction: 'Inbound'
-          access: 'Deny'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '3389'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ]
-  }
-}
-
-// NSG for VNet/Subnet
-resource vnetNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
-  name: '${vmName}-vnet-nsg'
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'deny-rdp-vnet'
-        properties: {
-          priority: 4000
-          direction: 'Inbound'
-          access: 'Deny'
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '3389'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
-    ]
-  }
-}
-
-// Associate NSG with NIC
-resource nicNsgAssociation 'Microsoft.Network/networkInterfaces/networkSecurityGroup@2021-03-01' = {
-  parent: nic
-  name: 'nic-nsg-association'
-  properties: {
-    networkSecurityGroup: {
-      id: nicNsg.id
-    }
-  }
-}   
-// Associate NSG with VNet/Subnet
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-03-01' existing = {
-  parent: vnet
-  name: 'default'
-}
-
-resource vnetNsgAssociation 'Microsoft.Network/virtualNetworks/subnets/networkSecurityGroup@2021-03-01' = {
-  parent: subnet
-  name: 'networkSecurityGroup'
-  properties: {
-    networkSecurityGroup: {
-      id: vnetNsg.id
-    }
-  }
-}
