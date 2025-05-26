@@ -3,25 +3,8 @@ param sqlServerName string
 param adminLogin string
 @secure()
 param adminPassword string
-param publicIpName string = 'vmPublicIp'
 param firewallRuleName string = 'AllowVmPublicIp'
-param publicIpAddress string 
-
-
-// Create Public IP for VM
-resource publicIp 'Microsoft.Network/publicIPAddresses@2022-01-01' = {
-  name: publicIpName
-  location: location
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    publicIPAllocationMethod: 'Static'
-  }
-}
-
-output publicIpAddress string = publicIp.properties.ipAddress
-output publicIpResourceId string = publicIp.id
+param vmPublicIp string
 
 // Create SQL Server
 resource sqlServer 'Microsoft.Sql/servers@2022-02-01-preview' = {
@@ -39,14 +22,10 @@ resource sqlFirewallRule 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview
   parent: sqlServer
   name: firewallRuleName
   properties: {
-    startIpAddress: publicIpAddress
-    endIpAddress: publicIpAddress
+    startIpAddress: vmPublicIp
+    endIpAddress: vmPublicIp
   }
-  dependsOn: [
-    sqlServer
-    publicIp
-  ]
 }
 
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
-output vmPublicIp string = publicIp.properties.ipAddress
+
