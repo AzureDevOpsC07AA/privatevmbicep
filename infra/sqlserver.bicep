@@ -5,6 +5,8 @@ param adminLogin string
 param adminPassword string
 param publicIpName string = 'vmPublicIp'
 param firewallRuleName string = 'AllowVmPublicIp'
+param publicIpAddress string 
+
 
 // Create Public IP for VM
 resource publicIp 'Microsoft.Network/publicIPAddresses@2022-01-01' = {
@@ -17,6 +19,9 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2022-01-01' = {
     publicIPAllocationMethod: 'Static'
   }
 }
+
+output publicIpAddress string = publicIp.properties.ipAddress
+output publicIpResourceId string = publicIp.id
 
 // Create SQL Server
 resource sqlServer 'Microsoft.Sql/servers@2022-02-01-preview' = {
@@ -34,8 +39,8 @@ resource sqlFirewallRule 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview
   parent: sqlServer
   name: firewallRuleName
   properties: {
-    startIpAddress: publicIp.properties.ipAddress
-    endIpAddress: publicIp.properties.ipAddress
+    startIpAddress: publicIpAddress
+    endIpAddress: publicIpAddress
   }
   dependsOn: [
     sqlServer
