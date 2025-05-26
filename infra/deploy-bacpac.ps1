@@ -1,3 +1,4 @@
+'''
 param(
     [string]$BacpacUrl,
     [string]$TargetSqlServer,
@@ -32,3 +33,5 @@ Write-Host "Importing .bacpac to SQL Server: $TargetSqlServer, Database: $Target
 & "$sqlPackageExe" /a:Import /sf:"$bacpacPath" /tsn:"$TargetSqlServer" /tdn:"$TargetDatabase" /tu:"$SqlAdmin" /tp:"$SqlPassword" /p:DatabaseEdition=Standard /p:DatabaseServiceObjective=S0
 
 Write-Host "✅ Database import complete."
+'''
+

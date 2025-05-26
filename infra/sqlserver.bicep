@@ -25,6 +25,21 @@ resource firewallRule 'Microsoft.Sql/servers/firewallRules@2022-05-01-preview' =
   }
 }
 
+resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
+  name: 'AdventureWorksLT'
+  parent: sqlServer
+  location: location
+  properties: {
+    sampleName: 'AdventureWorksLT' // This deploys the sample database
+    maxSizeBytes: 2147483648 // 2 GB, adjust if needed
+  }
+  sku: {
+    name: 'S1'
+    tier: 'Standard'
+    capacity: 20
+  }
+}
+
 output sqlServerName string = sqlServer.name
 output sqlServerFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
 
