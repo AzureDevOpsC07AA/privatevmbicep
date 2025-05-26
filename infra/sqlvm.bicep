@@ -3,7 +3,7 @@ param adminUsername string
 @secure()
 param adminPassword string
 param location string = resourceGroup().location
-param publicIpFromSql string
+param publicIpId string
 param bacpacStorageUrl string
 param targetSqlServer string
 param targetDb string
@@ -57,7 +57,6 @@ resource vnetNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
   }
 }
 
-// Update NIC resource to reference NSG
 resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
   name: '${vmName}-nic'
   location: location
@@ -73,6 +72,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
             id: vnet.properties.subnets[0].id
           }
           privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: publicIpId
+          }
         }
       }
     ]

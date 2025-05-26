@@ -35,6 +35,8 @@ module publicIp 'publicip.bicep' = {
   }
 }
 
+var publicIpId = publicIp.outputs.publicIpResourceId
+
 module sqlServer 'sqlserver.bicep' = {
   name: 'deploySqlServer'
   scope: rg
