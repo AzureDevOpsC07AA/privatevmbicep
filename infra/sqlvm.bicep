@@ -163,4 +163,3 @@ resource scriptExt 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
     }
   }
 }
-

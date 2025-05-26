@@ -57,11 +57,9 @@ Invoke-WebRequest -Uri $sqlFileUrl -OutFile $sqlFilePath
 
 Write-Host "Downloaded SQL script to $sqlFilePath"
 
-# Escape single quotes in the password if any (replace ' with '')
-$escapedPassword = $SqlPassword -replace "'", "''"
 
 # Build the connection string (inject real values, wrap password in single quotes)
-$connectionStringValue = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin;Password='$escapedPassword';Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+$connectionStringValue = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin; Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 
 # Define the script content
 $scriptContent = @"
@@ -96,3 +94,4 @@ $shortcut.IconLocation = "powershell.exe"
 $shortcut.Save()
 
 Write-Host "Shortcut created at $shortcutPath"
+

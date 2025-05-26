@@ -15,6 +15,7 @@ param location string
 @description('Password for the Windows VM')
 param winVMPassword string //no value specified, so user will get prompted for it during deployment
 
+
 var tags = {
   'azd-env-name': environmentName
   CostControl:'Ignore'
