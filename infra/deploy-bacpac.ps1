@@ -1,3 +1,20 @@
+az login --identity | Out-Null
+
+$resourceGroup = "rg-sqlworkload"
+$sqlServerName = "sqlserver-sqlworkload"
+$firewallRuleName = "AllowMyVM"
+
+# Get the public IP of the VM from inside the VM
+$publicIp = (Invoke-RestMethod -Uri "http://whatismyip.akamai.com/")
+Write-Output "Detected public IP: $publicIp"
+
+# Add firewall rule to SQL Server
+az sql server firewall-rule create `
+  --resource-group $resourceGroup `
+  --server $sqlServerName `
+  --name $firewallRuleName `
+  --start-ip-address $publicIp `
+  --end-ip-address $publicIp
 
 
 $bacpacUrl = "https://github.com/koenraadhaedens/azd-sqlworloadsim/raw/e94d861ed5d780408fa7cdc44d80bc4590b9ae17/media/adventureworks2017.bacpac"
@@ -11,6 +28,7 @@ $bacpacPath = "$env:TEMP\adventureworks2017.bacpac"
 # --- Variables ---
 $msiUrl = "https://go.microsoft.com/fwlink/?linkid=2316310"
 $msiPath = "$env:TEMP\SqlPackageInstaller.msi"
+
 
 
 Write-Host "Downloading .bacpac file..."
