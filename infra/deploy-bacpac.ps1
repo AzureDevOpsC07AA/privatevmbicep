@@ -65,17 +65,18 @@ $connectionStringValue = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatab
 
 $scriptContent = @"
 param(
-    [string]\$ConnectionString,
-    [string]\$SqlFile
+    [string]`$ConnectionString,
+    [string]`$SqlFile
 )
 
-\$query = Get-Content \$SqlFile -Raw
+`$query = Get-Content `$SqlFile -Raw
 
-for (\$i = 0; \$i -lt 1000; \$i++) {
-    Invoke-Sqlcmd -ConnectionString \$ConnectionString -Query \$query
-    Write-Host "Executed iteration \$i"
+for (`$i = 0; `$i -lt 1000; `$i++) {
+    Invoke-Sqlcmd -ConnectionString `$ConnectionString -Query `$query
+    Write-Host `"Executed iteration `$i`"
 }
 "@
+
 
 # Write the script to file
 $runScriptPath = Join-Path $scriptFolder "run-workload.ps1"
