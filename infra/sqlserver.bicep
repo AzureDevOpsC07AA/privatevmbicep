@@ -26,3 +26,5 @@ resource firewallRule 'Microsoft.Sql/servers/firewallRules@2022-05-01-preview' =
 }
 
 output sqlServerName string = sqlServer.name
+output sqlServerFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
+
