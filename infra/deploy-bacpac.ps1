@@ -59,18 +59,21 @@ Write-Host "Downloaded SQL script to $sqlFilePath"
 
 
 # Build the connection string (inject real values, wrap password in single quotes)
-$connectionStringValue = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin; Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 
-# Define the script content
+$connectionStringValue = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin;Password='$SqlPassword';Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+
+
 $scriptContent = @"
-`$connectionString = `"$connectionStringValue`"
-`$sqlFile = `"$sqlFilePath`"
+param(
+    [string]\$ConnectionString,
+    [string]\$SqlFile
+)
 
-`$query = Get-Content `$sqlFile -Raw
+\$query = Get-Content \$SqlFile -Raw
 
-for (`$i = 0; `$i -lt 1000; `$i++) {
-    Invoke-Sqlcmd -ConnectionString `$connectionString -Query `$query
-    Write-Host `"Executed iteration `$i`"
+for (\$i = 0; \$i -lt 1000; \$i++) {
+    Invoke-Sqlcmd -ConnectionString \$ConnectionString -Query \$query
+    Write-Host "Executed iteration \$i"
 }
 "@
 
