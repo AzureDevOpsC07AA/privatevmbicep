@@ -36,13 +36,21 @@ Write-Host "✅ Database import complete."
 '''
 
 
-# Make sure the target folder exists
+param(
+    [string]$BacpacUrl,
+    [string]$TargetSqlServer,
+    [string]$TargetDatabase,
+    [string]$SqlAdmin,
+    [string]$SqlPassword
+)
+
+# Ensure script folder exists
 $scriptFolder = "C:\scripts"
 if (-not (Test-Path $scriptFolder)) {
     New-Item -Path $scriptFolder -ItemType Directory
 }
 
-# Build the connection string
+# Build connection string
 $connectionString = "Server=tcp:$TargetSqlServer,1433;Database=$TargetDatabase;User ID=$SqlAdmin;Password=$SqlPassword;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 
 # Define the script content
@@ -63,3 +71,18 @@ $scriptPath = Join-Path $scriptFolder "run-workload.ps1"
 $scriptContent | Out-File -FilePath $scriptPath -Encoding UTF8
 
 Write-Host "Script generated at $scriptPath"
+
+# Create shortcut on desktop for all users
+$WScriptShell = New-Object -ComObject WScript.Shell
+$desktopPath = "$Env:Public\Desktop"
+$shortcutPath = Join-Path $desktopPath "Run Workload Simulation.lnk"
+
+$shortcut = $WScriptShell.CreateShortcut($shortcutPath)
+$shortcut.TargetPath = "powershell.exe"
+$shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$scriptPath`""
+$shortcut.WorkingDirectory = $scriptFolder
+$shortcut.WindowStyle = 1
+$shortcut.IconLocation = "powershell.exe"
+$shortcut.Save()
+
+Write-Host "Shortcut created at $shortcutPath"
