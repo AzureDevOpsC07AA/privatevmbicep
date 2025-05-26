@@ -20,12 +20,6 @@ var tags = {
 }
 
 
-// Generate a unique string using resource group ID and environment name
-var uniqueSuffix = uniqueString(environmentName)
-
-// Create a valid SQL Server name using only allowed characters (lowercase, numbers, hyphens)
-var randomizedSqlServerName = toLower('sqlserver-${environmentName}-${uniqueSuffix}')
-
 resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   name: 'rg-${environmentName}'
   location: location
@@ -54,7 +48,7 @@ module sqlServer 'sqlserver.bicep' = {
 module vmModule './sqlvm.bicep' = {
   name: 'deploySqlVM'
   params: {
-    vmName: randomizedSqlServerName
+    vmName: 'sqlvm'
     adminUsername: 'vmadmin'
     adminPassword: winVMPassword
     bacpacStorageUrl: 'https://github.com/koenraadhaedens/azd-sqlworloadsim/raw/refs/heads/main/media/adventureworks2017.bacpac'
