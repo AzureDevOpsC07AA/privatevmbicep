@@ -54,13 +54,9 @@ module vmModule './sqlvm.bicep' = {
     vmName: 'sqlvm'
     adminUsername: 'vmadmin'
     adminPassword: winVMPassword
-    bacpacStorageUrl: 'https://github.com/koenraadhaedens/azd-sqlworloadsim/raw/refs/heads/main/media/adventureworks2017.bacpac'
-    targetSqlServer: sqlServer.outputs.sqlServerFullyQualifiedDomainName
-    targetDb: 'AdventureWorks2017'
-    sqlAdmin: 'sqladmin'
-    sqlPassword: winVMPassword
     publicIpId: publicIp.outputs.publicIpResourceId
     keyVaultName: sqlServer.outputs.keyVaultName
+    keyVaultFqdn: sqlServer.outputs.keyVaultFqdn
   }
   scope: rg
 }

@@ -41,7 +41,7 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
 }
 
 output sqlServerName string = sqlServer.name
-output sqlServerFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
+// output sqlServerFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
 
 resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
   name: 'myKeyVault${uniqueString(resourceGroup().id)}'
@@ -68,3 +68,12 @@ resource sqlConnSecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
 
 // output keyvault name
 output keyVaultName string = keyVault.name
+//output keyvaltsecretUri string = sqlConnSecret.properties.secretUri
+output sqlServerFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
+//output sqlconnSecret secret name
+output sqlConnSecretName string = sqlConnSecret.name
+// output keyvault fqdn
+output keyVaultFqdn string = keyVault.properties.vaultUri
+
+
+

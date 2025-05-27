@@ -1,36 +1,25 @@
-'''
-param(
-    [string]$BacpacUrl,
-    [string]$TargetSqlServer,
-    [string]$TargetDatabase,
-    [string]$SqlAdmin,
-    [string]$SqlPassword
+param (
+    [string]$KeyvaultFQDN
 )
 
-$msiUrl = "https://go.microsoft.com/fwlink/?linkid=2316310"
-$msiPath = "$env:TEMP\\SqlPackageInstaller.msi"
-$bacpacPath = "$env:TEMP\\adventureworks2017.bacpac"
-
-Write-Host "Downloading .bacpac file from $BacpacUrl..."
-Invoke-WebRequest -Uri $BacpacUrl -OutFile $bacpacPath
-
-Write-Host "Downloading SqlPackage installer..."
-Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath
-
-Write-Host "Installing SqlPackage..."
-Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /quiet /norestart" -Wait
-
-Write-Host "Searching for SqlPackage.exe..."
-$sqlPackageExe = Get-ChildItem -Path "C:\\" -Recurse -Filter "SqlPackage.exe" -ErrorAction SilentlyContinue -Force |
-                 Where-Object { $_.FullName -like "*sqlpackage*" } |
-                 Select-Object -First 1 -ExpandProperty FullName
-
-if (-not $sqlPackageExe) {
-    throw "SqlPackage.exe not found anywhere on disk."
+# Ensure the target directory exists
+$targetFolder = "C:\scripts"
+if (-not (Test-Path $targetFolder)) {
+    New-Item -Path $targetFolder -ItemType Directory | Out-Null
 }
 
-Write-Host "Importing .bacpac to SQL Server: $TargetSqlServer, Database: $TargetDatabase"
-& "$sqlPackageExe" /a:Import /sf:"$bacpacPath" /tsn:"$TargetSqlServer" /tdn:"$TargetDatabase" /tu:"$SqlAdmin" /tp:"$SqlPassword" /p:DatabaseEdition=Standard /p:DatabaseServiceObjective=S0
+$targetFile = Join-Path $targetFolder "get-keyvault-secret.ps1"
 
-Write-Host "✅ Database import complete."
-'''
+# Build the script content
+$lines = @()
+$lines += '$KeyvaultFQDN1 = "' + $KeyvaultFQDN + '"'
+$lines += '$SecretName = "AdventureWorksLT-ConnectionString"'
+$lines += ''
+$lines += '$Response = Invoke-RestMethod -Uri ''http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net'' -Method GET -Headers @{Metadata="true"}'
+$lines += '$KeyVaultToken = $Response.access_token'
+$lines += '$uri = Invoke-RestMethod -Uri https://$KeyvaultFQDN1/secrets/$SecretName/?api-version=2016-10-01 -Method GET -Headers @{Authorization="Bearer $KeyVaultToken"}'
+
+# Write to the file
+Set-Content -Path $targetFile -Value $lines
+
+Write-Host "File '$targetFile' has been created with the script content."

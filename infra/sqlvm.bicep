@@ -4,13 +4,9 @@ param adminUsername string
 param adminPassword string
 param location string = resourceGroup().location
 param publicIpId string
-param bacpacStorageUrl string
-param targetSqlServer string
-param targetDb string
-param sqlAdmin string
-@secure()
-param sqlPassword string
 param keyVaultName string
+param keyVaultFqdn string 
+
 
 
 // NSG for NIC
@@ -161,7 +157,7 @@ resource scriptExt 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
       ]
     }
     protectedSettings: {
-      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File deploy-bacpac.ps1 -BacpacUrl "${bacpacStorageUrl}" -TargetSqlServer "${targetSqlServer}" -TargetDatabase "${targetDb}" -SqlAdmin "${sqlAdmin}" -SqlPassword "${sqlPassword}"'
+      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File deploy-bacpac.ps1 -KeyvaultFQDN "${keyVaultFqdn}"'
     }
   }
 }
