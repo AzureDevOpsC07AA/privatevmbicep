@@ -60,14 +60,34 @@ Before you begin, make sure you have:
 
 - Resource Group named after your chosen environment.
 
-## Access Information
+## Start Workload
 
-Once deployment is complete, the outputs will display:
+Once deployment is complete:
 
-- VM public IP address and credentials
-- SQL Server connection details
+1. **Enable RDP Access**
 
-Make sure to store these safely for connecting and testing.
+   - **Recommended**: Use **Azure Just-in-Time (JIT)** access to open RDP securely on port 3389.  
+     Go to the VM in the Azure Portal → **Microsoft Defender for Cloud** → **Just-in-Time VM access** → request RDP access.
+   
+   - **Alternatively**: Manually create an **Inbound Security Rule** in the Network Security Group (NSG) attached to the VM:
+     - Allow **RDP (TCP port 3389)** from your public IP.
+     - Set a limited time window to reduce exposure.
+
+2. **Connect to the Virtual Machine**
+
+   - Use Remote Desktop (RDP) to connect to the VM using:
+     - The public IP address from the deployment outputs.
+     - The admin username and password you provided during deployment.
+
+3. **Start the Workload Simulation**
+
+   - Once logged in to the VM, locate the **desktop shortcut** for the workload simulator.
+   - Double-click the shortcut to start the workload.
+
+4. **Monitor Performance**
+
+   - Use the **Azure Portal** → SQL Database → Metrics, or monitoring tools inside the VM, to observe workload behavior.
+
 
 ## Cleanup
 
