@@ -28,6 +28,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
   tags: tags
 }
 
+
 module publicIp 'publicip.bicep' = {
   name: 'deployPublicIp'
   scope: rg
@@ -35,8 +36,6 @@ module publicIp 'publicip.bicep' = {
     location: location
   }
 }
-
-var publicIpId = publicIp.outputs.publicIpResourceId
 
 module sqlServer 'sqlserver.bicep' = {
   name: 'deploySqlServer'
@@ -61,6 +60,7 @@ module vmModule './sqlvm.bicep' = {
     sqlAdmin: 'sqladmin'
     sqlPassword: winVMPassword
     publicIpId: publicIp.outputs.publicIpResourceId
+    environmentName: environmentName
   }
   scope: rg
 }

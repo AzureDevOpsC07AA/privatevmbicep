@@ -10,6 +10,7 @@ param targetDb string
 param sqlAdmin string
 @secure()
 param sqlPassword string
+param environmentName string
 
 // NSG for NIC
 resource nicNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
@@ -161,5 +162,31 @@ resource scriptExt 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
     protectedSettings: {
       commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File deploy-bacpac.ps1 -BacpacUrl "${bacpacStorageUrl}" -TargetSqlServer "${targetSqlServer}" -TargetDatabase "${targetDb}" -SqlAdmin "${sqlAdmin}" -SqlPassword "${sqlPassword}"'
     }
+  }
+}
+
+output vmPrincipalId string = vm.identity.principalId
+
+
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+  name: 'kv-${environmentName}'
+}
+
+resource vmAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-02-01' = {
+  parent: keyVault
+  name: 'add'
+  properties: {
+    accessPolicies: [
+      {
+        tenantId: subscription().tenantId
+        objectId: vm.identity.principalId
+        permissions: {
+          secrets: [
+            'get'
+          ]
+        }
+      }
+    ]
   }
 }

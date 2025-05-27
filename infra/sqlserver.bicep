@@ -43,3 +43,25 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
 output sqlServerName string = sqlServer.name
 output sqlServerFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
 
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
+  name: 'myKeyVault${uniqueString(resourceGroup().id)}'
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: subscription().tenantId
+    accessPolicies: []
+  }
+}
+
+var sqlConnectionString = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=AdventureWorksLT;User ID=${sqlAdminUsername};Password=${sqlAdminPassword};Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;'
+
+resource sqlConnSecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: keyVault
+  name: 'AdventureWorksLT-ConnectionString'
+  properties: {
+    value: sqlConnectionString
+  }
+}
