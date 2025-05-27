@@ -99,6 +99,7 @@ For Azure SQL Database, the Performance Recommendations feature (sometimes calle
 ✅ No workload = no recommendations: If the database has no or very low activity, the advisor has nothing to analyze, so it won’t recommend anything.  
 
 
+
 ## Cleanup
 
 To avoid unexpected charges, remove the deployed resources when done:
