@@ -30,22 +30,28 @@ $lines += '$sqlFile = "C:\scripts\workloadsim.sql"'
 $lines += '$query = Get-Content $sqlFile -Raw'
 $lines += ''
 $lines += 'for ($i = 0; $i -lt 1000; $i++) {'
-$lines += '    Invoke-Sqlcmd -ConnectionString $connectionString -Query $query'
+$lines += '    Invoke-Sqlcmd -ConnectionString $connectionString.value -Query $query'
 $lines += '    Write-Host "Executed iteration $i"'
 $lines += '}'
 
 # Write to the file
 Set-Content -Path $targetFile -Value $lines
 
-//create shortcut for this script on all user desktops
-$shortcutPath = [System.IO.Path]::Combine([Environment]::GetFolderPath("CommonDesktopDirectory"), "WorkloadSim.ps1.lnk")
+# Create shortcut
+$targetFile = "C:\scripts\WorkloadSim.ps1"
+$targetFolder = Split-Path $targetFile
+# Path for the shortcut on all user desktops
+$shortcutPath = [System.IO.Path]::Combine([Environment]::GetFolderPath("CommonDesktopDirectory"), "WorkloadSim.lnk")
+# Create the shortcut
 $WshShell = New-Object -ComObject WScript.Shell     
 $shortcut = $WshShell.CreateShortcut($shortcutPath)
-$shortcut.TargetPath = $targetFile
+# Set the target to PowerShell executable
+$shortcut.TargetPath = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+# Set arguments to run the script
+$shortcut.Arguments = "-ExecutionPolicy Bypass -NoProfile -File `"$targetFile`""
+# Optional: set working directory (if needed)
 $shortcut.WorkingDirectory = $targetFolder
-$shortcut.IconLocation = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-$shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$targetFile`""
-$shortcut.Save()    
-
-
-
+# Optional: set a custom icon (otherwise leave this out)
+$shortcut.IconLocation = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+# Save the shortcut
+$shortcut.Save()
