@@ -65,3 +65,6 @@ resource sqlConnSecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
     value: sqlConnectionString
   }
 }
+
+// output keyvault name
+output keyVaultName string = keyVault.name

@@ -10,7 +10,8 @@ param targetDb string
 param sqlAdmin string
 @secure()
 param sqlPassword string
-param environmentName string
+param keyVaultName string
+
 
 // NSG for NIC
 resource nicNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
@@ -170,7 +171,7 @@ output vmPrincipalId string = vm.identity.principalId
 
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: 'kv-${environmentName}'
+  name: keyVaultName
 }
 
 resource vmAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-02-01' = {
@@ -190,3 +191,5 @@ resource vmAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-02-01' = 
     ]
   }
 }
+
+

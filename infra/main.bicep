@@ -60,6 +60,7 @@ module vmModule './sqlvm.bicep' = {
     sqlAdmin: 'sqladmin'
     sqlPassword: winVMPassword
     publicIpId: publicIp.outputs.publicIpResourceId
+    keyVaultName: sqlServer.outputs.keyVaultName
     environmentName: environmentName
   }
   scope: rg
