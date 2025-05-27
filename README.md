@@ -88,6 +88,16 @@ Once deployment is complete:
 
    - Use the **Azure Portal** → SQL Database → Metrics, or monitoring tools inside the VM, to observe workload behavior.
 
+ For Azure SQL Database, the Performance Recommendations feature (sometimes called SQL Database Advisor) generally starts providing recommendations after it has collected at least a few days of workload telemetry — typically 24–72 hours of continuous activity.
+
+5. **Demo Performance Recommendations
+
+For Azure SQL Database, the Performance Recommendations feature (sometimes called SQL Database Advisor) generally starts providing recommendations after it has collected at least a few days of workload telemetry — typically 24–72 hours of continuous activity.
+
+✅ Initial recommendations: You might see something as soon as 24 hours if the workload is steady and significant.
+✅ More accurate & refined recommendations: Expect around 5–7 days of regular usage to get meaningful index tuning and query improvement suggestions.
+✅ No workload = no recommendations: If the database has no or very low activity, the advisor has nothing to analyze, so it won’t recommend anything.  
+
 
 ## Cleanup
 
