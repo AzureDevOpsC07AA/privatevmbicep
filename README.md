@@ -52,13 +52,23 @@ Before you begin, make sure you have:
 
 ## What’s Deployed
 
-- Azure Virtual Machine (Windows)  
-  → Pre-configured to simulate SQL workloads.
+- **Azure Virtual Machine (Windows)**  
+  Pre-configured to simulate SQL workloads.
 
-- Azure SQL Server + Database  
-  → Connected to the workload simulation.
+- **Azure SQL Server + Database**  
+  Connected to the workload simulation.
 
-- Resource Group named after your chosen environment.
+- **Azure Key Vault**  
+  Used to securely store secrets and credentials.
+
+- **Public IP Address**  
+  Assigned to the VM for remote access.
+
+- **Network Security Groups (NSGs)**  
+  Protect the VM and subnet with inbound/outbound rules.
+
+- **Resource Group**  
+  All resources are grouped under a resource group named after your chosen environment.
 
 ## Start Workload
 
