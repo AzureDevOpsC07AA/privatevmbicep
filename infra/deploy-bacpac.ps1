@@ -40,7 +40,7 @@ $lines += '}'
 Set-Content -Path $targetFile -Value $lines
 
 # Create shortcut
-$targetFile = "C:\scripts\WorkloadSim.ps1"
+$targetFile = "C:\scripts\workloadSim.ps1"
 $targetFolder = Split-Path $targetFile
 # Path for the shortcut on all user desktops
 $shortcutPath = [System.IO.Path]::Combine([Environment]::GetFolderPath("CommonDesktopDirectory"), "WorkloadSim.lnk")
@@ -57,3 +57,64 @@ $shortcut.WorkingDirectory = $targetFolder
 $shortcut.IconLocation = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 # Save the shortcut
 $shortcut.Save()
+
+
+
+# === Worloadsim as service CONFIGURATION ===
+$serviceName = "WorkloadSimService"
+$serviceDisplayName = "Workload Simulator"
+$scriptPath = "C:\scripts\workloadsim.ps1"
+$nssmUrl = "https://nssm.cc/release/nssm-2.24.zip"
+$installPath = "C:\nssm"
+$downloadPath = "$env:TEMP\nssm.zip"
+$extractPath = "$env:TEMP\nssm"
+
+# === STEP 1: Download NSSM ===
+if (-Not (Test-Path $installPath)) {
+    New-Item -ItemType Directory -Path $installPath | Out-Null
+}
+
+Write-Host "Downloading NSSM..."
+Invoke-WebRequest -Uri $nssmUrl -OutFile $downloadPath
+
+Write-Host "Extracting NSSM..."
+Expand-Archive -Path $downloadPath -DestinationPath $extractPath -Force
+
+# Get 64-bit executable
+$nssmExeSource = Get-ChildItem -Path $extractPath -Recurse -Filter "nssm.exe" | Where-Object { $_.FullName -match "win64" } | Select-Object -First 1
+
+if (-Not $nssmExeSource) {
+    Write-Error "Could not find NSSM 64-bit executable."
+    exit
+}
+
+Copy-Item $nssmExeSource.FullName -Destination "$installPath\nssm.exe" -Force
+
+# Cleanup
+Remove-Item $downloadPath -Force
+Remove-Item $extractPath -Recurse -Force
+
+$nssmPath = "$installPath\nssm.exe"
+Write-Host "✅ NSSM installed at $nssmPath"
+
+# === STEP 2: Install the Service ===
+Write-Host "Installing service '$serviceName'..."
+
+# Check if service already exists
+if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
+    Write-Host "Service '$serviceName' already exists. Stopping and removing it..."
+    Stop-Service $serviceName -Force
+    & $nssmPath remove $serviceName confirm
+}
+
+# Install the new service
+& $nssmPath install $serviceName powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
+
+# Set display name and startup type
+& $nssmPath set $serviceName DisplayName "$serviceDisplayName"
+& $nssmPath set $serviceName Start SERVICE_AUTO_START
+
+# Start the service
+Start-Service $serviceName
+
+Write-Host "✅ Service '$serviceName' has been created and started."
