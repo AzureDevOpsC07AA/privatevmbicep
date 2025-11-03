@@ -34,11 +34,11 @@ if (-not (Test-Path "C:\Program Files\PowerShell\7\pwsh.exe")) {
 if (-not (Get-Module -ListAvailable -Name SqlServer)) {
     Write-Host "Installing SqlServer module..."
     # Install NuGet provider first (silently)
-    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Confirm:$false
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Confirm:$false -ForceBootstrap
     # Set PSGallery as trusted repository
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -Confirm:$false
     # Install SqlServer module without prompts
-    Install-Module SqlServer -RequiredVersion 22.4.5.1 -Force -AllowClobber -Scope AllUsers -Confirm:$false -AcceptLicense
+    Install-Module SqlServer -RequiredVersion 22.4.5.1 -Force -AllowClobber -Scope AllUsers -Confirm:$false -AcceptLicense -SkipPublisherCheck -AllowPrerelease:$false
     Write-Host "SqlServer module installed successfully"
 } else {
     Write-Host "SqlServer module already installed"
