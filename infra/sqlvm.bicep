@@ -3,9 +3,7 @@ param adminUsername string
 @secure()
 param adminPassword string
 param location string = resourceGroup().location
-param publicIpId string
-param keyVaultName string
-param keyVaultFqdn string 
+param publicIpId string 
 
 
 
@@ -141,51 +139,12 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
   }
 }
 
-// Custom script to import .bacpac
-resource scriptExt 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
-  parent: vm
-  name: 'CustomScriptExtension'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.10'
-    autoUpgradeMinorVersion: true
-    settings: {
-      fileUris: [
-        'https://raw.githubusercontent.com/koenraadhaedens/azd-sqlworloadsim/refs/heads/main/infra/deploy-bacpac.ps1'
-      ]
-    }
-    protectedSettings: {
-      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File deploy-bacpac.ps1 -KeyvaultFQDN "${keyVaultFqdn}"'
-    }
-  }
-}
+// Custom script extension moved to separate module to handle dependencies properly
 
 output vmPrincipalId string = vm.identity.principalId
 
 
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: keyVaultName
-}
-
-resource vmAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-02-01' = {
-  parent: keyVault
-  name: 'add'
-  properties: {
-    accessPolicies: [
-      {
-        tenantId: subscription().tenantId
-        objectId: vm.identity.principalId
-        permissions: {
-          secrets: [
-            'get'
-          ]
-        }
-      }
-    ]
-  }
-}
+// Key Vault access policy is now handled in a separate module
 
 

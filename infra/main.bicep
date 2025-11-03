@@ -37,17 +37,6 @@ module publicIp 'publicip.bicep' = {
   }
 }
 
-module sqlServer 'sqlserver.bicep' = {
-  name: 'deploySqlServer'
-  scope: rg
-  params: {
-    location: location
-    sqlAdminUsername: 'sqladmin'
-    sqlAdminPassword: winVMPassword
-    allowedIpAddress: publicIp.outputs.ipAddress
-  }
-}
-
 module vmModule './sqlvm.bicep' = {
   name: 'deploySqlVM'
   params: {
@@ -55,6 +44,24 @@ module vmModule './sqlvm.bicep' = {
     adminUsername: 'vmadmin'
     adminPassword: winVMPassword
     publicIpId: publicIp.outputs.publicIpResourceId
+  }
+  scope: rg
+}
+
+module sqlServer 'sqlserver.bicep' = {
+  name: 'deploySqlServer'
+  scope: rg
+  params: {
+    location: location
+    allowedIpAddress: publicIp.outputs.ipAddress
+    vmPrincipalId: vmModule.outputs.vmPrincipalId
+  }
+}
+
+module vmKeyVaultConfig './sqlvm-keyvault-config.bicep' = {
+  name: 'configureVMKeyVault'
+  params: {
+    vmPrincipalId: vmModule.outputs.vmPrincipalId
     keyVaultName: sqlServer.outputs.keyVaultName
     keyVaultFqdn: sqlServer.outputs.keyVaultFqdn
   }

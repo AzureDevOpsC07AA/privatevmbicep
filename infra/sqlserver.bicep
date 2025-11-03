@@ -1,27 +1,84 @@
 targetScope = 'resourceGroup'
 
 param location string
-param sqlAdminUsername string
-@secure()
-param sqlAdminPassword string
 param allowedIpAddress string
+param vmPrincipalId string
 
-resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
-  name: 'mySqlServer${uniqueString(resourceGroup().id)}'
+resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
+  name: 'sql-${uniqueString(resourceGroup().id)}'
   location: location
   properties: {
-    administratorLogin: sqlAdminUsername
-    administratorLoginPassword: sqlAdminPassword
     version: '12.0'
+    minimalTlsVersion: '1.2'
+    publicNetworkAccess: 'Enabled'
+    restrictOutboundNetworkAccess: 'Disabled'
+    administrators: {
+      administratorType: 'ActiveDirectory'
+      principalType: 'Application'
+      login: 'sqlvm-managed-identity'
+      sid: vmPrincipalId
+      tenantId: subscription().tenantId
+      azureADOnlyAuthentication: true
+    }
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  tags: {
+    Environment: 'Dev'
+    Application: 'SQLWorkloadSim'
   }
 }
 
+// Security Center settings for SQL server
+resource sqlServerSecurityAlertPolicy 'Microsoft.Sql/servers/securityAlertPolicies@2022-05-01-preview' = {
+  name: 'Default'
+  parent: sqlServer
+  properties: {
+    state: 'Enabled'
+    emailAddresses: []
+    emailAccountAdmins: false
+    retentionDays: 0
+  }
+}
+
+// Azure Defender for SQL
+resource sqlServerAdvancedThreatProtection 'Microsoft.Sql/servers/advancedThreatProtectionSettings@2022-05-01-preview' = {
+  name: 'Default'
+  parent: sqlServer
+  properties: {
+    state: 'Enabled'
+  }
+}
+
+// Server-level audit settings
+resource sqlServerAuditingSettings 'Microsoft.Sql/servers/auditingSettings@2022-05-01-preview' = {
+  name: 'default'
+  parent: sqlServer
+  properties: {
+    state: 'Enabled'
+    isAzureMonitorTargetEnabled: true
+    retentionDays: 90
+  }
+}
+
+// Allow VM public IP to access the server
 resource firewallRule 'Microsoft.Sql/servers/firewallRules@2022-05-01-preview' = {
-  name: 'AllowMyPublicIp'
+  name: 'AllowVMPublicIP'
   parent: sqlServer
   properties: {
     startIpAddress: allowedIpAddress
     endIpAddress: allowedIpAddress
+  }
+}
+
+// Allow Azure services to access the server
+resource firewallRuleAzureServices 'Microsoft.Sql/servers/firewallRules@2022-05-01-preview' = {
+  name: 'AllowAllWindowsAzureIps'
+  parent: sqlServer
+  properties: {
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
   }
 }
 
@@ -53,10 +110,22 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     }
     tenantId: subscription().tenantId
     accessPolicies: []
+    enabledForDeployment: false
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: false
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    enablePurgeProtection: true
+    enableRbacAuthorization: false
+    publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
   }
 }
 
-var sqlConnectionString = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=AdventureWorksLT;User ID=${sqlAdminUsername};Password=${sqlAdminPassword};Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;'
+var sqlConnectionString = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=AdventureWorksLT;Authentication=Active Directory Managed Identity;Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;'
 
 resource sqlConnSecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
   parent: keyVault
