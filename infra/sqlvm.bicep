@@ -121,7 +121,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
     storageProfile: {
       imageReference: {
         publisher: 'MicrosoftSQLServer'
-        offer: 'SQL2019-WS2019'
+        offer: 'SQL2022-WS2022'
         sku: 'Standard-gen2'
         version: 'latest'
       }
