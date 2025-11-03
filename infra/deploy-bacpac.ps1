@@ -17,29 +17,29 @@ Invoke-WebRequest -Uri $scriptUrl -OutFile $scriptPath
 
 $targetFile = Join-Path $targetFolder "workloadsim.ps1"
 
+# Install PowerShell 7 if not already installed
+if (-not (Test-Path "C:\Program Files\PowerShell\7\pwsh.exe")) {
+    Write-Host "Installing PowerShell 7..."
+    $pwshUrl = "https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/PowerShell-7.4.6-win-x64.msi"
+    $pwshInstaller = "$env:TEMP\PowerShell-7.4.6-win-x64.msi"
+    Invoke-WebRequest -Uri $pwshUrl -OutFile $pwshInstaller
+    Start-Process msiexec.exe -Wait -ArgumentList "/I $pwshInstaller /quiet"
+    Write-Host "PowerShell 7 installed successfully"
+} else {
+    Write-Host "PowerShell 7 already installed"
+}
+
+# Install SqlServer module if not already installed
+if (-not (Get-Module -ListAvailable -Name SqlServer)) {
+    Write-Host "Installing SqlServer module..."
+    Install-Module SqlServer -RequiredVersion 22.4.5.1 -Force -AllowClobber
+    Write-Host "SqlServer module installed successfully"
+} else {
+    Write-Host "SqlServer module already installed"
+}
+
 # Build the script content
 $lines = @()
-$lines += '# Install PowerShell 7 if not already installed'
-$lines += 'if (-not (Test-Path "C:\Program Files\PowerShell\7\pwsh.exe")) {'
-$lines += '    Write-Host "Installing PowerShell 7..."'
-$lines += '    $pwshUrl = "https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/PowerShell-7.4.6-win-x64.msi"'
-$lines += '    $pwshInstaller = "$env:TEMP\PowerShell-7.4.6-win-x64.msi"'
-$lines += '    Invoke-WebRequest -Uri $pwshUrl -OutFile $pwshInstaller'
-$lines += '    Start-Process msiexec.exe -Wait -ArgumentList "/I $pwshInstaller /quiet"'
-$lines += '    Write-Host "PowerShell 7 installed successfully"'
-$lines += '} else {'
-$lines += '    Write-Host "PowerShell 7 already installed"'
-$lines += '}'
-$lines += ''
-$lines += '# Install SqlServer module if not already installed'
-$lines += 'if (-not (Get-Module -ListAvailable -Name SqlServer)) {'
-$lines += '    Write-Host "Installing SqlServer module..."'
-$lines += '    Install-Module SqlServer -RequiredVersion 22.4.5.1 -Force -AllowClobber'
-$lines += '    Write-Host "SqlServer module installed successfully"'
-$lines += '} else {'
-$lines += '    Write-Host "SqlServer module already installed"'
-$lines += '}'
-$lines += ''
 $lines += '$KeyvaultFQDN1 = "' + $KeyvaultFQDN + '"'
 $lines += '$SecretName = "AdventureWorksLT-ConnectionString"'
 $lines += ''
