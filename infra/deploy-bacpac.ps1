@@ -31,26 +31,33 @@ if (-not (Test-Path "C:\Program Files\PowerShell\7\pwsh.exe")) {
 
 
 # Install SqlServer module if not already installed
-if (-not (Get-Module -ListAvailable -Name SqlServer)) {
-    Write-Host "Installing SqlServer module..."
+$sqlServerModule = Get-Module -ListAvailable -Name SqlServer | Where-Object { $_.Version -eq "22.4.5.1" }
+if (-not $sqlServerModule) {
+    Write-Host "Installing SqlServer module version 22.4.5.1..."
     # Install NuGet provider first (silently)
     Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Confirm:$false -ForceBootstrap
     # Set PSGallery as trusted repository
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -Confirm:$false
     # Install SqlServer module without prompts
     Install-Module SqlServer -RequiredVersion 22.4.5.1 -Force -AllowClobber -Scope AllUsers -Confirm:$false -AcceptLicense -SkipPublisherCheck -AllowPrerelease:$false
-    Write-Host "SqlServer module installed successfully"
+    
+    # Verify installation
+    $installedModule = Get-Module -ListAvailable -Name SqlServer | Where-Object { $_.Version -eq "22.4.5.1" }
+    if ($installedModule) {
+        Write-Host "SqlServer module 22.4.5.1 installed successfully at: $($installedModule.ModuleBase)"
+    } else {
+        Write-Error "Failed to install SqlServer module 22.4.5.1"
+        # List available SqlServer modules for debugging
+        $availableModules = Get-Module -ListAvailable -Name SqlServer
+        Write-Host "Available SqlServer modules:"
+        $availableModules | ForEach-Object { Write-Host "  - Version: $($_.Version), Path: $($_.ModuleBase)" }
+    }
 } else {
-    Write-Host "SqlServer module already installed"
+    Write-Host "SqlServer module 22.4.5.1 already installed at: $($sqlServerModule.ModuleBase)"
 }
 
 # Build the script content
 $lines = @()
-$lines += '# Force import SqlServer module to override SQLPS'
-$lines += 'Remove-Module SQLPS -Force -ErrorAction SilentlyContinue'
-$lines += 'Import-Module SqlServer -RequiredVersion 22.4.5.1 -Force'
-$lines += 'Write-Host "Using SqlServer module: $((Get-Command Invoke-Sqlcmd).Module.Name) version $((Get-Command Invoke-Sqlcmd).Module.Version)"'
-$lines += ''
 $lines += '$KeyvaultFQDN1 = "' + $KeyvaultFQDN + '"'
 $lines += '$SecretName = "AdventureWorksLT-ConnectionString"'
 $lines += ''
