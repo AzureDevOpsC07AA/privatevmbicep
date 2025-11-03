@@ -125,7 +125,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
   }
 }
 
-var sqlConnectionString = 'Server=${sqlServer.properties.fullyQualifiedDomainName};Database=AdventureWorksLT;Authentication=Active Directory Managed Identity;Encrypt=true;TrustServerCertificate=false;Connection Timeout=30;'
+var sqlConnectionString = 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=AdventureWorksLT;Authentication=ActiveDirectoryManagedIdentity;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
 
 resource sqlConnSecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
   parent: keyVault
