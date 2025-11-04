@@ -52,6 +52,18 @@ resource vnetNsg 'Microsoft.Network/networkSecurityGroups@2021-03-01' = {
   }
 }
 
+// Public IP for SQL VM
+resource publicIp 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: '${vmName}-pip'
+  location: location
+  sku: {
+    name: 'Standard'
+  }
+  properties: {
+    publicIPAllocationMethod: 'Static'
+  }
+}
+
 resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
   name: '${vmName}-nic'
   location: location
@@ -67,6 +79,9 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
             id: vnet.properties.subnets[0].id
           }
           privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: publicIp.id
+          }
         }
       }
     ]
@@ -148,6 +163,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
 output vmPrincipalId string = vm.identity.principalId
 output vnetId string = vnet.id
 output privateEndpointSubnetId string = vnet.properties.subnets[1].id
+output publicIpAddress string = publicIp.properties.ipAddress
 
 // Key Vault access policy is now handled in a separate module
 
