@@ -9,7 +9,7 @@ if (-not (Test-Path $targetFolder)) {
     New-Item -Path $targetFolder -ItemType Directory | Out-Null
 }
 
-// download sql script from github
+# download sql script from github
 $scriptUrl = "https://raw.githubusercontent.com/koenraadhaedens/azd-sqlworloadsim/refs/heads/main/sqlscript/workloadsim.sql"
 $scriptPath = Join-Path $targetFolder "workloadsim.sql"
 Invoke-WebRequest -Uri $scriptUrl -OutFile $scriptPath  
