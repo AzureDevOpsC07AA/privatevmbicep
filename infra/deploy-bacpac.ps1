@@ -30,8 +30,8 @@ if (-not (Test-Path "C:\Program Files\PowerShell\7\pwsh.exe")) {
 }
 
 
-
-Install-Module SqlServer -Force -AllowClobber
+Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
+Install-Module SqlServer -Force -AllowClobber -Confirm:$false -ErrorAction SilentlyContinue
 
 
 
