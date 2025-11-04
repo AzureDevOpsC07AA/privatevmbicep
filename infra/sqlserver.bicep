@@ -1,7 +1,6 @@
 targetScope = 'resourceGroup'
 
 param location string
-param allowedIpAddress string
 param vmPrincipalId string
 
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
@@ -10,7 +9,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   properties: {
     version: '12.0'
     minimalTlsVersion: '1.2'
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: 'Disabled'
     restrictOutboundNetworkAccess: 'Disabled'
     administrators: {
       administratorType: 'ActiveDirectory'
@@ -62,25 +61,7 @@ resource sqlServerAuditingSettings 'Microsoft.Sql/servers/auditingSettings@2022-
   }
 }
 
-// Allow VM public IP to access the server
-resource firewallRule 'Microsoft.Sql/servers/firewallRules@2022-05-01-preview' = {
-  name: 'AllowVMPublicIP'
-  parent: sqlServer
-  properties: {
-    startIpAddress: allowedIpAddress
-    endIpAddress: allowedIpAddress
-  }
-}
-
-// Allow Azure services to access the server
-resource firewallRuleAzureServices 'Microsoft.Sql/servers/firewallRules@2022-05-01-preview' = {
-  name: 'AllowAllWindowsAzureIps'
-  parent: sqlServer
-  properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '0.0.0.0'
-  }
-}
+// Firewall rules removed - using private endpoint instead
 
 resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
   name: 'AdventureWorksLT'
@@ -98,6 +79,7 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
 }
 
 output sqlServerName string = sqlServer.name
+output sqlServerId string = sqlServer.id
 // output sqlServerFullyQualifiedDomainName string = sqlServer.properties.fullyQualifiedDomainName
 
 resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
@@ -117,10 +99,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     softDeleteRetentionInDays: 90
     enablePurgeProtection: true
     enableRbacAuthorization: false
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: 'Disabled'
     networkAcls: {
       bypass: 'AzureServices'
-      defaultAction: 'Allow'
+      defaultAction: 'Deny'
     }
   }
 }
@@ -143,6 +125,7 @@ output sqlServerFullyQualifiedDomainName string = sqlServer.properties.fullyQual
 output sqlConnSecretName string = sqlConnSecret.name
 // output keyvault fqdn
 output keyVaultFqdn string = keyVault.properties.vaultUri
+output keyVaultId string = keyVault.id
 
 
 

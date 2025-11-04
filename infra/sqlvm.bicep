@@ -2,8 +2,7 @@ param vmName string
 param adminUsername string
 @secure()
 param adminPassword string
-param location string = resourceGroup().location
-param publicIpId string 
+param location string = resourceGroup().location 
 
 
 
@@ -68,9 +67,6 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-03-01' = {
             id: vnet.properties.subnets[0].id
           }
           privateIPAllocationMethod: 'Dynamic'
-          publicIPAddress: {
-            id: publicIpId
-          }
         }
       }
     ]
@@ -95,6 +91,14 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-03-01' = {
           networkSecurityGroup: {
             id: vnetNsg.id
           }
+        }
+      }
+      {
+        name: 'privateEndpointSubnet'
+        properties: {
+          addressPrefix: '10.0.1.0/24'
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
         }
       }
     ]
@@ -142,8 +146,8 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
 // Custom script extension moved to separate module to handle dependencies properly
 
 output vmPrincipalId string = vm.identity.principalId
-
-
+output vnetId string = vnet.id
+output privateEndpointSubnetId string = vnet.properties.subnets[1].id
 
 // Key Vault access policy is now handled in a separate module
 

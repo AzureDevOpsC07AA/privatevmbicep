@@ -19,6 +19,7 @@ param winVMPassword string //no value specified, so user will get prompted for i
 var tags = {
   'azd-env-name': environmentName
   CostControl:'Ignore'
+  SecurityControl: 'Ignore'
 }
 
 
@@ -29,21 +30,20 @@ resource rg 'Microsoft.Resources/resourceGroups@2022-09-01' = {
 }
 
 
-module publicIp 'publicip.bicep' = {
-  name: 'deployPublicIp'
-  scope: rg
-  params: {
-    location: location
-  }
-}
-
 module vmModule './sqlvm.bicep' = {
   name: 'deploySqlVM'
   params: {
     vmName: 'sqlvm'
     adminUsername: 'vmadmin'
     adminPassword: winVMPassword
-    publicIpId: publicIp.outputs.publicIpResourceId
+  }
+  scope: rg
+}
+
+module privateDns './private-dns.bicep' = {
+  name: 'deployPrivateDns'
+  params: {
+    vnetId: vmModule.outputs.vnetId
   }
   scope: rg
 }
@@ -53,9 +53,21 @@ module sqlServer 'sqlserver.bicep' = {
   scope: rg
   params: {
     location: location
-    allowedIpAddress: publicIp.outputs.ipAddress
     vmPrincipalId: vmModule.outputs.vmPrincipalId
   }
+}
+
+module privateEndpoints './private-endpoints.bicep' = {
+  name: 'deployPrivateEndpoints'
+  params: {
+    location: location
+    subnetId: vmModule.outputs.privateEndpointSubnetId
+    sqlServerId: sqlServer.outputs.sqlServerId
+    keyVaultId: sqlServer.outputs.keyVaultId
+    sqlPrivateDnsZoneId: privateDns.outputs.sqlPrivateDnsZoneId
+    kvPrivateDnsZoneId: privateDns.outputs.kvPrivateDnsZoneId
+  }
+  scope: rg
 }
 
 module vmKeyVaultConfig './sqlvm-keyvault-config.bicep' = {
@@ -66,4 +78,7 @@ module vmKeyVaultConfig './sqlvm-keyvault-config.bicep' = {
     keyVaultFqdn: sqlServer.outputs.keyVaultFqdn
   }
   scope: rg
+  dependsOn: [
+    privateEndpoints
+  ]
 }
