@@ -3,85 +3,19 @@ param (
 )
 
 
-$ErrorActionPreference = "Stop"
-$ProgressPreference = "SilentlyContinue"
-
-function Log($msg) { Write-Host "$(Get-Date -Format 'HH:mm:ss')  $msg" }
-
-# ---------------------------------------------------------
-# Step 1: Install PowerShell 7 (MSI with retry)
-# ---------------------------------------------------------
-$pwshExe = "C:\Program Files\PowerShell\7\pwsh.exe"
-if (-not (Test-Path $pwshExe)) {
-    Log "Installing PowerShell 7..."
-    $pwshUrl = "https://github.com/PowerShell/PowerShell/releases/download/v7.4.6/PowerShell-7.4.6-win-x64.msi"
-    $pwshInstaller = "$env:TEMP\PowerShell-7.4.6-win-x64.msi"
-
-    $maxAttempts = 3
-    for ($i=1; $i -le $maxAttempts; $i++) {
-        try {
-            Log "Downloading PowerShell installer (attempt $i)..."
-            Invoke-WebRequest -Uri $pwshUrl -OutFile $pwshInstaller -UseBasicParsing -TimeoutSec 300
-            if (Test-Path $pwshInstaller) {
-                Log "Download complete. Installing..."
-                Start-Process msiexec.exe -Wait -ArgumentList "/i `"$pwshInstaller`" /quiet /norestart"
-                break
-            }
-        } catch {
-            Log "Attempt $i failed: $($_.Exception.Message)"
-            Start-Sleep -Seconds (10 * $i)
-        }
-    }
-
-    if (-not (Test-Path $pwshExe)) {
-        Log "ERROR: PowerShell 7 installation failed after $maxAttempts attempts."
-        exit 1
-    } else {
-        Log "PowerShell 7 installed successfully."
-    }
-} else {
-    Log "PowerShell 7 already installed."
+# Ensure the target directory exists
+$targetFolder = "C:\scripts"
+if (-not (Test-Path $targetFolder)) {
+    New-Item -Path $targetFolder -ItemType Directory | Out-Null
 }
 
-# ---------------------------------------------------------
-# Step 2: Trust PSGallery
-# ---------------------------------------------------------
-try {
-    Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
-    Log "PSGallery trusted."
-} catch {
-    Log "Warning: Failed to trust PSGallery. Continuing..."
-}
-
-# ---------------------------------------------------------
-# Step 3: Install SqlServer module with retry
-# ---------------------------------------------------------
-$moduleName = "SqlServer"
-$maxAttempts = 3
-$installed = $false
-
-for ($i=1; $i -le $maxAttempts; $i++) {
-    Log "Installing module '$moduleName' (attempt $i)..."
-    try {
-        Install-Module $moduleName -Force -AllowClobber -Confirm:$false -ErrorAction Stop
-        $installed = $true
-        break
-    } catch {
-        Log "Attempt $i failed: $($_.Exception.Message)"
-        Start-Sleep -Seconds (15 * $i)
-    }
-}
-
-if (-not $installed) {
-    Log "ERROR: Failed to install module '$moduleName' after $maxAttempts attempts."
-    exit 1
-}
-
-Log "All installations completed successfully."
+// download sql script from github
+$scriptUrl = "https://raw.githubusercontent.com/koenraadhaedens/azd-sqlworloadsim/refs/heads/main/sqlscript/workloadsim.sql"
+$scriptPath = Join-Path $targetFolder "workloadsim.sql"
+Invoke-WebRequest -Uri $scriptUrl -OutFile $scriptPath  
 
 
-
-
+$targetFile = Join-Path $targetFolder "workloadsim.ps1"
 
 # Build the script content
 $lines = @()
@@ -110,28 +44,14 @@ $lines += '    -Method GET).access_token'
 $lines += ''
 $lines += '# Load SQL query'
 $lines += '$sqlFile = "C:\scripts\workloadsim.sql"'
-$lines += 'if (-not (Test-Path $sqlFile)) {'
-$lines += '    Write-Error "SQL file not found: $sqlFile"'
-$lines += '    exit 1'
-$lines += '}'
 $lines += '$query = Get-Content $sqlFile -Raw'
-$lines += 'if ([string]::IsNullOrWhiteSpace($query)) {'
-$lines += '    Write-Error "SQL file is empty or contains only whitespace: $sqlFile"'
-$lines += '    exit 1'
-$lines += '}'
-$lines += 'Write-Host "Loaded SQL query from $sqlFile (Length: $($query.Length) characters)"'
 $lines += ''
 $lines += '# Execute continuously'
 $lines += '$i = 0'
 $lines += 'while ($true) {'
-$lines += '    try {'
-$lines += '        Invoke-Sqlcmd -ConnectionString $connectionString -AccessToken $sqlToken -Query $query | Out-Null'
-$lines += '        Write-Host "Executed iteration $i"'
-$lines += '        $i++'
-$lines += '    } catch {'
-$lines += '        Write-Error "Error executing SQL query: $_"'
-$lines += '        Start-Sleep -Seconds 5'
-$lines += '    }'
+$lines += '    Invoke-Sqlcmd -ConnectionString $connectionString -AccessToken $sqlToken -Query $query | Out-Null'
+$lines += '    Write-Host "Executed iteration $i"'
+$lines += '    $i++'
 $lines += '}'
 
 # Write to the file
@@ -166,5 +86,4 @@ $nssmUrl = "https://nssm.cc/release/nssm-2.24.zip"
 $installPath = "C:\nssm"
 $downloadPath = "$env:TEMP\nssm.zip"
 $extractPath = "$env:TEMP\nssm"
-
 
