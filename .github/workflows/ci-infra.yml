@@ -12,6 +12,7 @@ jobs:
     env:
       AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
     steps:
       - name: Welcome message
         run: echo "Welcome to the CI Infrastructure Deployment Workflow! This workflow will deploy the necessary infrastructure for our SQL workload simulation project."
@@ -36,7 +37,7 @@ jobs:
         run: |
             echo "Linting Bicep template..."
             cd infra
-            az bicep build --file main.bicep --stdout > /dev/null
+            az bicep build --file main.bicep --parameters main.parameters.json --stdout > /dev/null
             echo "Bicep template linting completed successfully."
 
       - name: Validate Bicep template
