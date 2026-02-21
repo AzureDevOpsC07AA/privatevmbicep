@@ -37,7 +37,7 @@ jobs:
         run: |
             echo "Linting Bicep template..."
             cd infra
-            az bicep build --file main.bicep --parameters main.parameters.json --stdout > /dev/null
+            az bicep build --file main.bicep --stdout > /dev/null
             echo "Bicep template linting completed successfully."
 
       - name: Validate Bicep template
