@@ -36,7 +36,7 @@ jobs:
         run: |
             echo "Linting Bicep template..."
             cd infra
-            az bicep build main.bicep --stdout > /dev/null
+            az bicep build --file main.bicep --stdout > /dev/null
             echo "Bicep template linting completed successfully."
 
       - name: Validate Bicep template
@@ -45,6 +45,12 @@ jobs:
             cd infra
             az deployment sub validate --location ${{ secrets.AZURE_LOCATION }} --template-file main.bicep --parameters @parameters.json
             echo "Bicep template validation completed successfully."
+
+      - name: Check VM size availability
+        run: |
+            echo "Checking VM size availability in the target region..."
+            az vm list-skus --location ${{ secrets.AZURE_LOCATION }} --size Standard_DS2_v2 --output table
+            echo "VM size availability check completed successfully."
 
       - name: Provide CI Results
         run: echo "CI Infrastructure Deployment workflow completed successfully. The Bicep template has been validated and is ready for deployment."
