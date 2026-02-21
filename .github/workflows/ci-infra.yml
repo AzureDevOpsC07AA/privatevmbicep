@@ -14,10 +14,6 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
       WIN_VM_PASSWORD: ${{ secrets.WIN_VM_PASSWORD }} 
-    
-    defaults:
-      run:
-        working-directory: infra
 
     steps:
       - name: Welcome message
@@ -52,6 +48,7 @@ jobs:
             # Using the .bicepparam file automatically references main.bicep
             az deployment sub validate \
               --location ${{ secrets.AZURE_LOCATION }} \
+              -- template-file main.bicep \
               --parameters main.bicepparam
 
       - name: Check VM size availability
