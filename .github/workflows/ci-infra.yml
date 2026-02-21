@@ -48,7 +48,7 @@ jobs:
             # Using the .bicepparam file automatically references main.bicep
             az deployment sub validate \
               --location ${{ secrets.AZURE_LOCATION }} \
-              -- template-file main.bicep \
+              --template-file main.bicep \
               --parameters main.bicepparam
 
       - name: Check VM size availability
