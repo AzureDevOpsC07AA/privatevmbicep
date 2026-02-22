@@ -39,7 +39,7 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
       - name: Test env
-        run: echo " ${{ vars.greeting }} "
+        run: echo " ${{ env.greeting }} "
       - run: echo "${{ env.Testcode }}"
           
   summary:
