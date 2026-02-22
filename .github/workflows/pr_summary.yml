@@ -41,6 +41,7 @@ jobs:
       - name: Test env
         run: echo " ${{ env.greeting }} "
       - run: echo "${{ env.Testcode }}"
+      - run: echo "${{ vars.PYTHONVERSOPN }}"
           
   summary:
     name: Pull Request Summary
