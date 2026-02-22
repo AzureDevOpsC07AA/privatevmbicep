@@ -1,4 +1,4 @@
-
+Test
 # Azure SQL Workload Simulator Demo
 
 This project sets up an Azure environment with a SQL workload simulator using Azure Developer CLI (azd).
