@@ -1,0 +1,71 @@
+name: CI Infrastructure Deployment
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  check-infra:
+    name: Check Infrastructure
+    runs-on: ubuntu-latest
+    env:
+      AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
+      WIN_VM_PASSWORD: ${{ secrets.WIN_VM_PASSWORD }} 
+
+    steps:
+      - name: Welcome message
+        run: echo "Welcome to the CI Infrastructure Deployment Workflow! This workflow will deploy the necessary infrastructure for our SQL workload simulation project."
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Bicep CLI and check working directory
+        run: |
+            az bicep install
+            az bicep version
+            echo "Bicep CLI installed successfully."
+            pwd
+            ls -la
+
+      - name: Lint Bicep template
+        run: |
+            echo "Linting Bicep template..."
+            cd infra
+            az bicep build --file main.bicep --stdout > /dev/null
+            echo "Bicep template linting completed successfully."
+
+      - name: Validate Bicep template
+        run: |
+            echo "Validating Bicep template..."
+            cd infra
+            # Using the .bicepparam file automatically references main.bicep
+            az deployment sub validate \
+              --location ${{ secrets.AZURE_LOCATION }} \
+              --template-file main.bicep \
+              --parameters main.bicepparam
+      
+      - name: What-If Bicep template
+        run: |
+            echo "Validating Bicep template..."
+            cd infra
+            # Using the .bicepparam file automatically references main.bicep
+            az deployment sub what-if \
+              --location ${{ secrets.AZURE_LOCATION }} \
+              --template-file main.bicep \
+              --parameters main.bicepparam
+
+      - name: Check VM size availability
+        run: |
+            echo "Checking VM size availability in the target region..."
+            az vm list-skus --location ${{ secrets.AZURE_LOCATION }} --size Standard_DS2_v2 --output table
+            echo "VM size availability check completed successfully."
+
+      - name: Provide CI Results
+        run: echo "CI Infrastructure Deployment workflow completed successfully. The Bicep template has been validated and is ready for deployment."
