@@ -1,0 +1,43 @@
+name: CI Infrastructure Deployment
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deployment:
+    name: Check deployvm
+    runs-on: ubuntu-latest
+    env:
+      AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_ENV_NAME: ${{ secrets.AZURE_ENV_NAME }}
+      WIN_VM_PASSWORD: ${{ secrets.WIN_VM_PASSWORD }} 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Bicep CLI and check working directory
+        run: |
+            az bicep install
+            az bicep version
+            echo "Bicep CLI installed successfully."
+            pwd
+            ls -la
+
+      - name: Deployment Bicep template
+        run: |
+            cd infra
+            # Using the .bicepparam file automatically references main.bicep
+            az deployment sub create \
+              --location ${{ secrets.AZURE_LOCATION }} \
+              --template-file main.bicep \
+              --parameters main.bicepparam      
+     
